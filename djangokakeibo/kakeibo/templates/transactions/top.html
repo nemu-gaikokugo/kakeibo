@@ -1,0 +1,38 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>家計簿</title>
+    </head>
+    <body>
+        <h1>ようこそ家計簿へ</h1>
+        <h2>取引一覧</h2>
+        {% if transactions %}
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>カテゴリ</th>
+                    <th>金額</th>
+                    <th>通貨</th>
+                    <th>取引日</th>
+                    <th>説明</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for transaction in transactions %}
+                <tr>
+                    <th>{{ transaction.transaction_id }}</th>
+                    <th>{{ transaction.category }}</th>
+                    <th>{{ transaction.amount }}</th>
+                    <th>{{ transaction.currency }}</th>
+                    <th>{{ transaction.date }}</th>
+                    <th>{{ transaction.description }}</th>                    
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p>取引はまだありません。</p>
+        {% endif %}
+    </body>
+</html>
