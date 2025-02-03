@@ -1,0 +1,9 @@
+{
+    "build": {
+      "cmd": "echo 'Build step (optional)'"
+    },
+    "deploy": {
+      "start": "npx serve ."
+    }
+  }
+  
