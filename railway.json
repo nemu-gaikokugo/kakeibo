@@ -3,7 +3,7 @@
       "cmd": "echo 'Build step (optional)'"
     },
     "deploy": {
-      "start": "npx serve ."
+      "start": "npm install && npm start"
     }
   }
   
