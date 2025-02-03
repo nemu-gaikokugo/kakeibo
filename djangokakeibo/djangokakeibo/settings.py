@@ -127,5 +127,5 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # 2025/02/03 自分で追加
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 CSRF_TRUSTED_ORIGINS = [
-    "https://kakeibo-production.up.railway.app/",
+    "https://kakeibo-production.up.railway.app",
 ]
