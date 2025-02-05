@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponseForbidden
+from django.http import HttpResponseForbidden, Http404
 from kakeibo.models import Transaction
 from kakeibo.forms import TransactionForm
 
@@ -35,10 +35,14 @@ def transaction_edit(request, transaction_id):
 @login_required
 def transaction_detail(request, transaction_id):
     transaction = get_object_or_404(Transaction, pk=transaction_id)
+    
+    if transaction.user != request.user:    # 他人の取引ページにアクセスするのを禁ずる
+        raise Http404
+    
     return render(request, 'transactions/transaction_detail.html', {'transaction': transaction})
 
 @login_required
 def top(request):
-    transactions = Transaction.objects.all()
+    transactions = Transaction.objects.filter(user=request.user)    # 自身の取引のみフィルター
     context = {"transactions": transactions}
     return render(request, "transactions/top.html", context)
