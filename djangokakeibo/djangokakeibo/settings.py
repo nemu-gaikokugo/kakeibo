@@ -58,7 +58,7 @@ ROOT_URLCONF = 'djangokakeibo.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -130,4 +130,9 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 CSRF_TRUSTED_ORIGINS = [
     "https://kakeibo-production.up.railway.app",
+]
+
+# 2025/02/05 自分で追加
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, "static"),
 ]

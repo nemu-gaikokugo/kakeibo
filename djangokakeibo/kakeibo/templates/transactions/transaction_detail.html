@@ -1,14 +1,11 @@
-<html>
-    <head>
-        <meta charset="utf-8">
-        <title>取引詳細</title>
-    </head>
-    <body>
-        <div>
-            <h2>取引ID：{{ transaction.transaction_id }}</h2>
-            <small>取引日：{{ transaction.date }}</small>
-            <p>金額：{{ transaction.amount }}</p>
-            <p>{{ transaction.description }}</p>
-        </div>
-    </body>
-</html>
+{% extends "base.html" %}
+{% load django_bootstrap5 %}
+
+{% block main %}
+<div>
+    <h2>取引ID：{{ transaction.transaction_id }}</h2>
+    <small>取引日：{{ transaction.date }}</small>
+    <p>金額：{{ transaction.amount }}</p>
+    <p>{{ transaction.description }}</p>
+</div>
+{% endblock %}

@@ -1,55 +1,37 @@
-{% load static %}
-{% load django_bootstrap5 %}
-<html>
-    <head>
-        <meta charset="utf-8">
-        <title>家計簿</title>
-        {% bootstrap_css %}
-        {% bootstrap_javascript %}
-        <link rel="stylesheet" href="{% static 'kakeibo/css/style.css' %}">
-    </head>
-    <body>
-        <nav class="navbar navbar-expand flex-md-row navbar-dark bg-dark">
-            <div class="container justify-content-between">
-                <a href="/" class="navbar-brand">家計簿</a>
-            </div>
-        </nav>
-        <main>
-            <div class="container">
-                <div class="welcome">
-                    <h1>ようこそ家計簿へ</h1>
-                    <a class="btn btn-primary" href="{% url 'transaction_new' %}">取引を追加する</a>
-                </div>
-                <h2>取引一覧</h2>
-                {% if transactions %}
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>カテゴリ</th>
-                            <th>金額</th>
-                            <th>通貨</th>
-                            <th>取引日</th>
-                            <th>説明</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for transaction in transactions %}
-                        <tr>
-                            <th>{{ transaction.transaction_id }}</th>
-                            <th>{{ transaction.category }}</th>
-                            <th>{{ transaction.amount }}</th>
-                            <th>{{ transaction.currency }}</th>
-                            <th>{{ transaction.date }}</th>
-                            <th>{{ transaction.description }}</th>                    
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-                {% else %}
-                <p>取引はまだありません。</p>
-                {% endif %}
-            </div>
-        </main>
-    </body>
-    </html>
+{% extends "base.html" %}
+
+{% block main%}
+<div class="welcome">
+    <h1>ようこそ家計簿へ</h1>
+    <a class="btn btn-primary" href="{% url 'transaction_new' %}">取引を追加する</a>
+</div>
+<h2>取引一覧</h2>
+{% if transactions %}
+<table class="table">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>カテゴリ</th>
+            <th>金額</th>
+            <th>通貨</th>
+            <th>取引日</th>
+            <th>説明</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for transaction in transactions %}
+        <tr>
+            <th>{{ transaction.transaction_id }}</th>
+            <th>{{ transaction.category }}</th>
+            <th>{{ transaction.amount }}</th>
+            <th>{{ transaction.currency }}</th>
+            <th>{{ transaction.date }}</th>
+            <th>{{ transaction.description }}</th>                    
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p>取引はまだありません。</p>
+{% endif %}
+{% endblock %}
