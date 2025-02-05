@@ -5,7 +5,7 @@
     <h1>ようこそ家計簿へ</h1>
     <a class="btn btn-primary" href="{% url 'transaction_new' %}">取引を追加する</a>
 </div>
-<h2>取引一覧</h2>
+<h2>今月（{{ current_month }}月）の取引一覧</h2>
 {% if transactions %}
 <table class="table">
     <thead>
@@ -29,6 +29,26 @@
             <th>{{ transaction.description }}</th>                    
         </tr>
         {% endfor %}
+    </tbody>
+</table>
+<table>
+    <tbody>
+        <tr>
+            <th>今月の収入</th>
+            <td>{{ summary.monthly_income }}</td>
+        </td>
+        <tr>
+            <th>今月の支出</th>
+            <td>{{ summary.monthly_expense }}</td>
+        </tr>
+        <tr>
+            <th>今月の収支</th>
+            <td>{{ summary.monthly_balance }}</td>
+        </tr>
+        <tr>
+            <th>累計残金</th>
+            <td>{{ summary.total_balance }}</td>
+        </tr>
     </tbody>
 </table>
 {% else %}
