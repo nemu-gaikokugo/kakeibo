@@ -5,7 +5,12 @@
     <h1>ようこそ家計簿へ</h1>
     <a class="btn btn-primary" href="{% url 'transaction_new' %}">取引を追加する</a>
 </div>
-<h2>今月（{{ current_month }}月）の取引一覧</h2>
+<h2>
+    今月（{{ current_month }}月）の取引一覧
+    <form method="get" action="{% url 'export_transactions' %}" style="float: right;">
+        <button type="submit" class="btn btn-primary">CSVファイルをダウンロードする</button>
+    </form>
+</h2>
 {% if transactions %}
 <table class="table">
     <thead>

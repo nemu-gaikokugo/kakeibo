@@ -1,10 +1,11 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponseForbidden, Http404
+from django.http import HttpResponseForbidden, Http404, HttpResponse
 from django.utils.timezone import now
 from datetime import datetime
 from kakeibo.models import Transaction
 from kakeibo.forms import TransactionForm
+import csv
 
 # 取引登録ページ
 @login_required
@@ -61,7 +62,7 @@ def top(request):
     
     return render(request, "transactions/top.html", context)
 
-
+# 収支計算用関数
 def transaction_summary(user):
     today = now().date()
 
@@ -83,3 +84,31 @@ def transaction_summary(user):
         'monthly_balance': monthly_balance,
         'total_balance': total_balance,
     }
+
+# CSVファイルエクスポート用ページ
+def export_transactions(request):
+    # ヘッダーを設定し、CSVファイルとしてレスポンスを作成
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="transactions.csv"'
+
+    writer = csv.writer(response)
+    
+    # CSVのヘッダー（カラム名）
+    writer.writerow(['Transaction ID', 'User', 'Category', 'Amount', 'Currency', 'Account Type', 'Date', 'Description'])
+
+    # 取引データを取得して書き込み
+    transactions = Transaction.objects.all()
+
+    for transaction in transactions:
+        writer.writerow([
+            transaction.transaction_id,
+            transaction.user.username,  # ユーザー名を表示
+            transaction.category.name if transaction.category else '',
+            transaction.amount,
+            transaction.currency.name if transaction.currency else '',
+            transaction.account_type.name if transaction.account_type else '',
+            transaction.date,
+            transaction.description if transaction.description else ''
+        ])
+
+    return response
