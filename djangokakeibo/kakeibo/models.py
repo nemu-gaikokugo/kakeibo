@@ -19,12 +19,21 @@ class Currency(models.Model):
     def __str__(self):
         return self.name
 
+class AccountType(models.Model):
+    name = models.CharField("資金形態", max_length=50)
+    created_at = models.DateTimeField("作成日", auto_now_add=True)
+    updated_at = models.DateTimeField("更新日", auto_now=True)
+
+    def __str__(self):
+        return self.name
+
 class Transaction(models.Model):
     transaction_id = models.AutoField(primary_key=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     currency = models.ForeignKey(Currency, on_delete=models.SET_NULL, null=True)
+    account_type = models.ForeignKey(AccountType, on_delete=models.SET_NULL, null=True)
     date = models.DateField()
     description = models.TextField(blank=True, null=True)
 

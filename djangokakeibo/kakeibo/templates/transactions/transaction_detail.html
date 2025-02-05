@@ -5,7 +5,9 @@
 <div>
     <h2>取引ID：{{ transaction.transaction_id }}</h2>
     <small>取引日：{{ transaction.date }}</small>
-    <p>金額：{{ transaction.amount }}</p>
-    <p>{{ transaction.description }}</p>
+    <p>金額：{{ transaction.amount }} {{ transaction.currency }}({{ transaction.currency.symbol }})</p>
+    <p>資金形態：{{ transaction.account_type }}</p>
+    <p>カテゴリ：{{ transaction.category }}</p>
+    <p>説明：{{ transaction.description }}</p>
 </div>
 {% endblock %}
