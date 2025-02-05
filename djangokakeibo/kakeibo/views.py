@@ -32,10 +32,12 @@ def transaction_edit(request, transaction_id):
         form = TransactionForm(instance=transaction)
     return render(request, 'transactions/transaction_edit.html', {'form': form})
 
+@login_required
 def transaction_detail(request, transaction_id):
     transaction = get_object_or_404(Transaction, pk=transaction_id)
     return render(request, 'transactions/transaction_detail.html', {'transaction': transaction})
 
+@login_required
 def top(request):
     transactions = Transaction.objects.all()
     context = {"transactions": transactions}
