@@ -7,4 +7,5 @@ urlpatterns = [
     path('', top, name='top'),
     path('transaction/', include('kakeibo.urls')),
     path('admin/', admin.site.urls),
+    path("accounts/", include("accounts.urls")),
 ]

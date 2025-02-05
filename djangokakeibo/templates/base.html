@@ -13,6 +13,30 @@
         <nav class="navbar navbar-expand flex-md-row navbar-dark bg-dark">
             <div class="container justify-content-between">
                 <a href="/" class="navbar-brand">家計簿</a>
+                <ul class="navbar-nav mr-md-2">
+                    {% if user.is_authenticated %}
+                    <li class="nav-item">
+                        <!-- Django 5.0以降、LogooutView()がGET送信を受け付けなくなったため変更 -->
+                        <!-- <a class="nav-link" href="{% url 'logout' %}">
+                            ログアウト
+                        </a> -->
+                        <form action="{% url 'logout' %}" method="post">
+                            {% csrf_token %}
+                            <input type="submit" value="ログアウト">
+                        </form>
+                    </li>
+                    {% else %}
+                    <li class="nav-item">
+                        <!-- <a class="nav-link" href="{% url 'login' %}">
+                            ログイン
+                        </a> -->
+                        <form action="{% url 'login' %}" method="post">
+                            {% csrf_token %}
+                            <input type="submit" value="ログイン">
+                        </form>
+                    </li>
+                    {% endif %}
+                </ul>
             </div>
         </nav>
         <main>
