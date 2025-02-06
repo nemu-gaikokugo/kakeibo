@@ -15,6 +15,7 @@
                 <a href="/" class="navbar-brand">家計簿</a>
                 <ul class="navbar-nav mr-md-2">
                     {% if user.is_authenticated %}
+                    <li class="navbar-text">ようこそ{{ request.user.username }}さん</li>
                     <li class="nav-item">
                         <!-- Django 5.0以降、LogooutView()がGET送信を受け付けなくなったため変更 -->
                         <!-- <a class="nav-link" href="{% url 'logout' %}">
@@ -22,7 +23,9 @@
                         </a> -->
                         <form action="{% url 'logout' %}" method="post">
                             {% csrf_token %}
-                            <input type="submit" value="ログアウト">
+                            <button type="submit" class="btn btn-outline-light btn-sm ms-2">
+                                ログアウト
+                            </button>
                         </form>
                     </li>
                     {% else %}
@@ -32,7 +35,9 @@
                         </a> -->
                         <form action="{% url 'login' %}" method="post">
                             {% csrf_token %}
-                            <input type="submit" value="ログイン">
+                            <button type="submit" class="btn btn-outline-light btn-sm ms-2">
+                                ログイン
+                            </button>
                         </form>
                     </li>
                     {% endif %}

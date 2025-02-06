@@ -91,13 +91,14 @@ def export_transactions(request):
     response = HttpResponse(content_type='text/csv')
     response['Content-Disposition'] = 'attachment; filename="transactions.csv"'
 
+    # CSVの出力先をresponseに設定
     writer = csv.writer(response)
     
     # CSVのヘッダー（カラム名）
     writer.writerow(['Transaction ID', 'User', 'Category', 'Amount', 'Currency', 'Account Type', 'Date', 'Description'])
 
-    # 取引データを取得して書き込み
-    transactions = Transaction.objects.all()
+    # ユーザー自身の取引データのみを取得して書き込み
+    transactions = Transaction.objects.filter(user=request.user)
 
     for transaction in transactions:
         writer.writerow([
