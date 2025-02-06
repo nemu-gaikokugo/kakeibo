@@ -6,13 +6,21 @@
     <a class="btn btn-primary" href="{% url 'transaction_new' %}">取引を追加する</a>
 </div>
 <h2>
-    今月（{{ current_month }}月）の取引一覧
+    <a href="{% url 'top_by_month' previous_year previous_month %}" class="btn btn-outline-primary">
+        ←
+    </a>
+    {{ current_year }}年{{ current_month }}月の取引一覧
+    {% if not is_latest_month %}
+        <a href="{% url 'top_by_month' next_year next_month %}" class="btn btn-outline-primary">
+            →
+        </a>
+    {% endif %}
     <form method="get" action="{% url 'export_transactions' %}" style="float: right;">
         <button type="submit" class="btn btn-primary">CSVファイルをダウンロードする</button>
     </form>
 </h2>
 {% if transactions %}
-<table class="table">
+<table class="table table-striped table-hover">
     <thead>
         <tr>
             <th>ID</th>
@@ -27,7 +35,7 @@
     <tbody>
         {% for transaction in transactions %}
         <tr>
-            <th>{{ transaction.transaction_id }}</th>
+            <th><a href="{% url 'transaction_detail' transaction.transaction_id %}" >{{ transaction.transaction_id }}</a></th>
             <th>{{ transaction.category }}</th>
             <th>{{ transaction.amount }}</th>
             <th>{{ transaction.currency }}</th>
@@ -38,27 +46,32 @@
         {% endfor %}
     </tbody>
 </table>
-<table>
+{% else %}
+<p>今月は取引がありません。</p>
+{% endif %}
+<table class="table table-bordered table-striped table-hover text-center">
     <tbody>
         <tr>
-            <th>今月の収入</th>
-            <td>{{ summary.monthly_income }}</td>
-        </td>
-        <tr>
-            <th>今月の支出</th>
-            <td>{{ summary.monthly_expense }}</td>
+            <th class="text-start">今月の収入</th>
+            <td class="text-end text-success">¥{{ summary.monthly_income }}</td>
         </tr>
         <tr>
-            <th>今月の収支</th>
-            <td>{{ summary.monthly_balance }}</td>
+            <th class="text-start">今月の支出</th>
+            <td class="text-end text-danger">¥{{ summary.monthly_expense }}</td>
         </tr>
         <tr>
-            <th>累計残金</th>
-            <td>{{ summary.total_balance }}</td>
+            <th class="text-start">今月の収支</th>
+            <td class="text-end {% if summary.monthly_balance >= 0 %}text-success{% else %}text-danger{% endif %}">
+                ¥{{ summary.monthly_balance }}
+            </td>
+        </tr>
+        <tr>
+            <th class="text-start">累計残金</th>
+            <td class="text-end fw-bold {% if summary.total_balance >= 0 %}text-success{% else %}text-danger{% endif %}">
+                ¥{{ summary.total_balance }}
+            </td>
         </tr>
     </tbody>
 </table>
-{% else %}
-<p>取引はまだありません。</p>
-{% endif %}
+
 {% endblock %}

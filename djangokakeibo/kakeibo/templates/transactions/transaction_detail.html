@@ -10,4 +10,9 @@
     <p>カテゴリ：{{ transaction.category }}</p>
     <p>説明：{{ transaction.description }}</p>
 </div>
+<form action="{% url 'transaction_edit' transaction.transaction_id %}">
+    <button type="submit">
+        編集
+    </button>
+</form>
 {% endblock %}

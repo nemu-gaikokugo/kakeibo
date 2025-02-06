@@ -4,5 +4,5 @@ from kakeibo.models import Transaction
 class TransactionForm(forms.ModelForm):
     class Meta:
         model = Transaction
-        fields = ('category', 'amount', 'currency', 'date', 'description')
+        fields = ('category', 'amount', 'currency', 'account_type', 'date', 'description')
         
