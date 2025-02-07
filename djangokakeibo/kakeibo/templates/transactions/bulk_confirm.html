@@ -16,7 +16,7 @@
         {% for transaction in transactions %}
         <tr>
             <td>{{ transaction.category }}</td>
-            <td>{{ transaction.amount }}</td>
+            <td class="{% if transaction.amount >= 0 %}text-success{% else %}text-danger{% endif %}">{{ transaction.amount }}</td>
             <td>{{ transaction.currency }}</td>
             <td>{{ transaction.account_type }}</td>
             <td>{{ transaction.date }}</td>

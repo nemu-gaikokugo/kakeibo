@@ -40,7 +40,7 @@
         <tr>
             <th><a href="{% url 'transaction_detail' transaction.transaction_id %}" >{{ transaction.transaction_id }}</a></th>
             <th>{{ transaction.category }}</th>
-            <th class="{% if summary.monthly_balance >= 0 %}text-success{% else %}text-danger{% endif %}">{{ transaction.amount }}</th>
+            <th class="{% if transaction.amount >= 0 %}text-success{% else %}text-danger{% endif %}">{{ transaction.amount }}</th>
             <th>{{ transaction.currency }}</th>
             <th>{{ transaction.account_type }}</th>
             <th>{{ transaction.date }}</th>
