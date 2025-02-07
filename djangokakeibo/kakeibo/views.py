@@ -131,7 +131,7 @@ def export_transactions(request):
     writer = csv.writer(response)
     
     # CSVのヘッダー（カラム名）
-    writer.writerow(['Transaction ID', 'User', 'Category', 'Amount', 'Currency', 'Account Type', 'Date', 'Description'])
+    writer.writerow(['Transaction ID', 'Category', 'Amount', 'Currency', 'Account Type', 'Date', 'Description'])
 
     # ユーザー自身の取引データのみを取得して書き込み
     transactions = Transaction.objects.filter(user=request.user)
@@ -139,7 +139,7 @@ def export_transactions(request):
     for transaction in transactions:
         writer.writerow([
             transaction.transaction_id,
-            transaction.user.username,  # ユーザー名を表示
+            # transaction.user.username,  # ユーザー名は表示しない（ユーザーにユーザー名を認識する必要がないようにするため
             transaction.category.name if transaction.category else '',
             transaction.amount,
             transaction.currency.name if transaction.currency else '',
