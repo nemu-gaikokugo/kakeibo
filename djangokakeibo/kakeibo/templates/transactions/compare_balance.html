@@ -1,12 +1,56 @@
 {% extends "base.html" %}
 {% block main %}
 
-<form method="POST">
+<!-- <form method="POST">
     {% csrf_token %}
-    {{ form.as_p }}
+    {{ cash_form.as_p }}
+    {{ account_form.as_p }}
 
     <button type="submit" class="btn btn-primary">入力終了</button>
-</form>
+</form> -->
+
+<div class="container my-4">
+    <form method="post">
+        {% csrf_token %}
+        <div class="card border-secondary">
+            <div class="card-header bg-light">
+                <h4 class="mb-0">所持中の現金を入力</h4>
+            </div>
+            <table class="table">
+                <tbody>
+                    {% for field in cash_form %}
+                    <tr>
+                        <td><label for="{{ field.id_for_label }}">{{ field.label }}</label></td>
+                        <td>{{ field }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div class="card border-secondary">
+
+            <div class="card-header bg-light">
+                <h4 class="mb-0">その他口座等の残高を入力</h4>
+            </div>
+            <div>
+                <table class="table">
+                    <tbody>
+                        {% for field in account_form %}
+                        <tr>
+                            <td><label for="{{ field.id_for_label }}">{{ field.label }}</label></td>
+                            <td>{{ field }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="text-right">
+            <button type="submit" class="btn btn-outline-secondary">入力終了</button>
+        </div>
+    </form>
+</div>
+
 
 <h3>計算結果</h3>
 <table class="table">
@@ -28,13 +72,7 @@
         <tr>
             <td>差額</td>
             <td>
-                {% if difference == 0 %}
-                    一致しています
-                {% elif difference > 0 %}
-                    {{ difference }} 円不足しています
-                {% else %}
-                    {{ difference }} 円過剰です
-                {% endif %}
+                {{ difference }} 円
             </td>
         </tr>
     </tbody>

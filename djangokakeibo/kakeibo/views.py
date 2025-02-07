@@ -6,7 +6,7 @@ from django.core.exceptions import ValidationError
 from django.db.models import Sum, F
 from datetime import datetime, date, timedelta
 from kakeibo.models import Transaction, Category, Currency, AccountType, Denomination, CashHolding
-from kakeibo.forms import TransactionForm, CompareBalanceForm
+from kakeibo.forms import TransactionForm, CompareCashBalanceForm, CompareAccountsBalanceForm
 import csv
 import json
 
@@ -274,47 +274,60 @@ def compare_balance(request):
     # 所持している現金情報の取得
     cash_holdings = CashHolding.objects.filter(user=request.user, currency=default_currency)
     print(cash_holdings)
-    # 所持金の初期値（値がなければ0）
+    # 所持している現金の初期値（値がなければ0）
     cash_data = {
         denomination.value: cash_holdings.filter(denomination=denomination).first().quantity if cash_holdings.filter(denomination=denomination).exists() else 0
         for denomination in Denomination.objects.filter(currency=default_currency)
     }
     print(cash_data)
+    # 現金以外の所持金の初期値（値がなければ0）
+    account_data = {account.name: 0 for account in AccountType.objects.all()}
+    print(account_data)
     
+    total_entered = 0
+    total_balance = sum(t.amount for t in Transaction.objects.filter(user=request.user, date__lt=calculate_end_of_month(now().date())))
     # 入力フォーム処理
     if request.method == 'POST':
-        form = CompareBalanceForm(request.POST)
-        if form.is_valid():
+        cash_form = CompareCashBalanceForm(request.POST)
+        if cash_form.is_valid():
             # ユーザーが入力した金額の合計を計算
-            total_entered = 0
             for denomination in Denomination.objects.all():
                 denomination_value = denomination.value
-                entered_value = form.cleaned_data.get(f'denomination_{denomination_value}', 0)
+                entered_value = cash_form.cleaned_data.get(f'denomination_{denomination_value}', 0) or 0
                 total_entered += denomination_value * entered_value
 
-            # 所持金データから計算した累計残金
-            total_balance = sum(
-                denomination.value * cash_data.get(denomination.value, 0)
-                for denomination in Denomination.objects.filter(currency=default_currency)
-            )
             print("ここまで来てる4")
-
-            # 差額計算
-            difference = total_balance - total_entered
-
-            # 計算結果をビューに渡す
-            return render(request, 'transactions/compare_balance.html', {
-                'form': form,
-                'cash_holdings': cash_holdings,
-                'total_balance': total_balance,
-                'total_entered': total_entered,
-                'difference': difference,
-            })
+        
+        account_form = CompareAccountsBalanceForm(request.POST)
+        if account_form.is_valid():
+            for account_type in AccountType.objects.all():
+                entered_value = account_form.cleaned_data.get(account_type.name) or 0
+                total_entered += entered_value
     else:
-        form = CompareBalanceForm(initial=cash_data)
+        cash_form = CompareCashBalanceForm(initial=cash_data)
+        account_form = CompareAccountsBalanceForm(initial=account_data)
     
-    # 所持金情報をビューに渡す
+    # 差額計算
+    difference = total_balance - total_entered
+    
+    # 計算結果をビューに渡す
     return render(request, 'transactions/compare_balance.html', {
-        'form': form,
+        'cash_form': cash_form,
+        'account_form': account_form,
         'cash_holdings': cash_holdings,
+        'total_balance': total_balance,
+        'total_entered': total_entered,
+        'difference': difference,
     })
+
+def calculate_end_of_month(today):
+    year = today.year
+    month = today.month
+
+    # start_of_month = datetime(year, month, 1).date()
+    if month == 12:
+        end_of_month = date(year+1, 1, 1)
+    else:
+        end_of_month = date(year, month+1, 1)
+    
+    return end_of_month
