@@ -2,9 +2,10 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseForbidden, Http404, HttpResponse
 from django.utils.timezone import now
+from django.core.exceptions import ValidationError
 from datetime import datetime, date, timedelta
 from kakeibo.models import Transaction, Category, Currency, AccountType
-from kakeibo.forms import TransactionForm, BulkTransactionFormSet
+from kakeibo.forms import TransactionForm#, BulkTransactionFormSet
 import csv
 import json
 
@@ -152,8 +153,15 @@ def export_transactions(request):
 
 @login_required
 def bulk_transaction_entry(request):
-    formset = BulkTransactionFormSet()
-    return render(request, 'transactions/bulk_entry.html', {'formset': formset})
+
+    # 入力値に問題があって戻ってきた場合はデータとエラーメッセージを取得
+    transactions_data = request.session.pop('bulk_transactions', None)
+    errors = request.session.pop('bulk_errors', [])
+    print(transactions_data)
+        
+    return render(request, 'transactions/bulk_entry.html', {
+        'transactions_json': json.dumps(transactions_data), # JavaScriptで扱うためJSON形式に変換
+        'errors': errors})
 
 @login_required
 def bulk_transaction_confirm(request):
@@ -162,18 +170,66 @@ def bulk_transaction_confirm(request):
             transactions_data = request.POST.get("transactions")
             transactions_json = json.loads(transactions_data)
             transactions = []
-            for row in transactions_json:
+            errors=[]
+            for index, row in enumerate(transactions_json):
+
                 # 表から取得した文字列データを格納
+                category_value = row[0]
+                amount_value=row[1]
+                currency_value=row[2]
+                account_type_value=row[3]
+                date_value=row[4]
+                description_value=row[5]
+
+                # 以下バリデーション
+                
+                # カテゴリのバリデーション
+                category = Category.objects.filter(name=category_value).first()
+                if not category:
+                    errors.append(f"{index+1}行目：カテゴリ '{category_value}' は存在しません。存在するカテゴリを入力してください。")
+
+                # 金額のバリデーション
+                try:
+                    amount=float(amount_value)
+                except ValueError:
+                    errors.append(f"{index+1}行目：金額 '{amount_value}' は無効な値です。数値を入力してください。")
+                
+                # 通貨のバリデーション
+                currency = Currency.objects.filter(name=currency_value).first()
+                if not currency:
+                    errors.append(f"{index+1}行目：通貨 '{currency_value}' は存在しません。存在する通貨を入力してください。")
+                
+                # 資金形態のバリデーション
+                account_type = AccountType.objects.filter(name=account_type_value).first()
+                if not account_type:
+                    errors.append(f"{index+1}行目：資金形態 '{account_type_value}' は存在しません。存在する資金形態を入力してください。")
+
+                # 日付のバリデーション
+                try:
+                    datetime.strptime(date_value, '%Y-%m-%d')
+                except ValueError:
+                    errors.append(f"{index+1}行目：日付 '{date_value}' は無効な形式です。(YYYY-MM-DD)形式で入力してください。")
+
+                # "説明"に関してはバリデーションを設けない
+
+                # 入力値に問題がなければ取引データを追加
                 transactions.append({
-                    'category': row[0],
-                    'amount': row[1],
-                    'currency': row[2],
-                    'account_type': row[3],
-                    'date': row[4],
-                    'description': row[5]
+                    'category': category_value,
+                    'amount': amount_value,
+                    'currency': currency_value,
+                    'account_type': account_type_value,
+                    'date': date_value,
+                    'description': description_value
                 })
-                    
+            
+            # セッションにデータを保存
             request.session['bulk_transactions'] = transactions
+            request.session['bulk_errors'] = errors
+            
+            # エラーがあった場合は入力値を保持しつつ入力画面へ遷移
+            if errors:
+                return redirect('bulk_transaction_entry')
+            
             return render(request, 'transactions/bulk_confirm.html', {'transactions':transactions})
         except json.JSONDecodeError:
             return redirect('bulk_transaction_entry')
