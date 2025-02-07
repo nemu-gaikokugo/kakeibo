@@ -39,3 +39,21 @@ class Transaction(models.Model):
 
     def __str__(self):
         return f"{self.user} - {self.category} - {self.amount}"
+    
+class Denomination(models.Model):
+    currency = models.ForeignKey(Currency, related_name='denominations', on_delete=models.CASCADE)
+    value = models.IntegerField()  # 札や硬貨の金額（例：10000, 5000, 1000）
+    denomination_type = models.CharField(max_length=10, choices=[('bill', '札'), ('coin', '硬貨')])
+
+    def __str__(self):
+        return f"{self.currency.symbol} {self.value} - {self.denomination_type}"
+
+class CashHolding(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)  # ユーザー
+    currency = models.ForeignKey(Currency, on_delete=models.CASCADE)  # 通貨
+    denomination = models.ForeignKey(Denomination, on_delete=models.CASCADE)  # 金種
+    quantity = models.PositiveIntegerField()  # 所持金額（その金種の枚数）
+
+    def __str__(self):
+        return f"{self.user.username} - {self.currency.symbol} {self.denomination.value} x {self.quantity}"
+    

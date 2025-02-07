@@ -9,4 +9,5 @@ urlpatterns = [
     path("bulk-entry/", views.bulk_transaction_entry, name="bulk_transaction_entry"),
     path("bulk-confirm/", views.bulk_transaction_confirm, name="bulk_transaction_confirm"),
     path("bulk-save", views.bulk_transaction_save, name="bulk_transaction_save"),
+    path("compare-balance", views.compare_balance, name="compare_balance"),
 ]

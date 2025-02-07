@@ -3,9 +3,10 @@ from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseForbidden, Http404, HttpResponse
 from django.utils.timezone import now
 from django.core.exceptions import ValidationError
+from django.db.models import Sum, F
 from datetime import datetime, date, timedelta
-from kakeibo.models import Transaction, Category, Currency, AccountType
-from kakeibo.forms import TransactionForm#, BulkTransactionFormSet
+from kakeibo.models import Transaction, Category, Currency, AccountType, Denomination, CashHolding
+from kakeibo.forms import TransactionForm, CompareBalanceForm
 import csv
 import json
 
@@ -264,3 +265,56 @@ def bulk_transaction_save(request):
         Transaction.objects.bulk_create(transactions)
     
     return redirect('top')
+
+@login_required
+def compare_balance(request):
+    # デフォルトの通貨は円とする
+    default_currency = Currency.objects.filter(name="円").first()
+    
+    # 所持している現金情報の取得
+    cash_holdings = CashHolding.objects.filter(user=request.user, currency=default_currency)
+    print(cash_holdings)
+    # 所持金の初期値（値がなければ0）
+    cash_data = {
+        denomination.value: cash_holdings.filter(denomination=denomination).first().quantity if cash_holdings.filter(denomination=denomination).exists() else 0
+        for denomination in Denomination.objects.filter(currency=default_currency)
+    }
+    print(cash_data)
+    
+    # 入力フォーム処理
+    if request.method == 'POST':
+        form = CompareBalanceForm(request.POST)
+        if form.is_valid():
+            # ユーザーが入力した金額の合計を計算
+            total_entered = 0
+            for denomination in Denomination.objects.all():
+                denomination_value = denomination.value
+                entered_value = form.cleaned_data.get(f'denomination_{denomination_value}', 0)
+                total_entered += denomination_value * entered_value
+
+            # 所持金データから計算した累計残金
+            total_balance = sum(
+                denomination.value * cash_data.get(denomination.value, 0)
+                for denomination in Denomination.objects.filter(currency=default_currency)
+            )
+            print("ここまで来てる4")
+
+            # 差額計算
+            difference = total_balance - total_entered
+
+            # 計算結果をビューに渡す
+            return render(request, 'transactions/compare_balance.html', {
+                'form': form,
+                'cash_holdings': cash_holdings,
+                'total_balance': total_balance,
+                'total_entered': total_entered,
+                'difference': difference,
+            })
+    else:
+        form = CompareBalanceForm(initial=cash_data)
+    
+    # 所持金情報をビューに渡す
+    return render(request, 'transactions/compare_balance.html', {
+        'form': form,
+        'cash_holdings': cash_holdings,
+    })

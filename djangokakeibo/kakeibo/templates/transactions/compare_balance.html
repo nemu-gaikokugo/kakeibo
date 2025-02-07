@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block main %}
+
+<form method="POST">
+    {% csrf_token %}
+    {{ form.as_p }}
+
+    <button type="submit" class="btn btn-primary">入力終了</button>
+</form>
+
+<h3>計算結果</h3>
+<table class="table">
+    <thead>
+        <tr>
+            <th>項目</th>
+            <th>金額</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>所持金の合計（累計残金）</td>
+            <td>{{ total_balance }} 円</td>
+        </tr>
+        <tr>
+            <td>入力金額の合計</td>
+            <td>{{ total_entered }} 円</td>
+        </tr>
+        <tr>
+            <td>差額</td>
+            <td>
+                {% if difference == 0 %}
+                    一致しています
+                {% elif difference > 0 %}
+                    {{ difference }} 円不足しています
+                {% else %}
+                    {{ difference }} 円過剰です
+                {% endif %}
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+{% endblock %}
