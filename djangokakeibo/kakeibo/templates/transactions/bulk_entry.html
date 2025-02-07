@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block main %}
+<h1>一括取引登録</h1>
+
+<!-- Handsontable用のスタイルとスクリプト -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/handsontable@12.1.0/dist/handsontable.full.min.css">
+<script src="https://cdn.jsdelivr.net/npm/handsontable@12.1.0/dist/handsontable.full.min.js"></script>
+
+<div id="transaction-table"></div>
+
+<form method="post" action="{% url 'bulk_transaction_confirm' %}" id="transaction-form">
+    {% csrf_token %}
+    <input type="hidden" name="transactions" id="transactions-data">
+    <button type="submit" class="btn btn-primary">入力終了</button>
+</form>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const container = document.getElementById("transaction-table");
+
+    const hot = new Handsontable(container, {
+        data: [],
+        startRows: 5,
+        startCols: 6,
+        colHeaders: ["カテゴリ", "金額", "通貨", "資金形態", "取引日", "説明"],
+        columns: [
+            { type: "text" },
+            { type: "numeric" },
+            { type: "text" },
+            { type: "text" },
+            { type: "date", dateFormat: 'YYYY-MM-DD' },
+            { type: "text" }
+        ],
+        minSpareRows: 1,  // 最後に自動追加行
+        contextMenu: true,  // 右クリックで操作メニュー
+        rowHeaders: true,
+        colWidths: [150, 100, 100, 120, 120, 200]
+    });
+
+    document.getElementById("transaction-form").addEventListener("submit", function (event) {
+        const data = hot.getData();
+
+        // 空の行を除去
+        const filteredData = data.filter(row => row.some(cell => cell !== "" && cell !== null));
+
+        // 変換されたデータをJSON文字列に変換してhiddenフィールドに格納
+        document.getElementById("transactions-data").value = JSON.stringify(filteredData);
+    });
+});
+</script>
+
+{% endblock %}

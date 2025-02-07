@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block main %}
+<h1>取引の確認</h1>
+<table class="table">
+    <thead>
+        <tr>
+            <th>カテゴリ</th>
+            <th>金額</th>
+            <th>通貨</th>
+            <th>資金形態</th>
+            <th>取引日</th>
+            <th>説明</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for transaction in transactions %}
+        <tr>
+            <td>{{ transaction.category }}</td>
+            <td>{{ transaction.amount }}</td>
+            <td>{{ transaction.currency }}</td>
+            <td>{{ transaction.account_type }}</td>
+            <td>{{ transaction.date }}</td>
+            <td>{{ transaction.description }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+<form method="post" action="{% url 'bulk_transaction_save' %}">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-success">登録</button>
+</form>
+{% endblock %}

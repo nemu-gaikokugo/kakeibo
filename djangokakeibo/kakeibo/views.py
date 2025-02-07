@@ -3,9 +3,10 @@ from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseForbidden, Http404, HttpResponse
 from django.utils.timezone import now
 from datetime import datetime, date, timedelta
-from kakeibo.models import Transaction
-from kakeibo.forms import TransactionForm
+from kakeibo.models import Transaction, Category, Currency, AccountType
+from kakeibo.forms import TransactionForm, BulkTransactionFormSet
 import csv
+import json
 
 # 取引登録ページ
 @login_required
@@ -147,3 +148,43 @@ def export_transactions(request):
         ])
 
     return response
+
+
+@login_required
+def bulk_transaction_entry(request):
+    formset = BulkTransactionFormSet()
+    return render(request, 'transactions/bulk_entry.html', {'formset': formset})
+
+@login_required
+def bulk_transaction_confirm(request):
+    if request.method=='POST':
+        try:
+            transactions_data = request.POST.get("transactions")
+            transactions_json = json.loads(transactions_data)
+            transactions = []
+            for row in transactions_json:
+                # 表から取得した文字列データを格納
+                transactions.append({
+                    'category': row[0],
+                    'amount': row[1],
+                    'currency': row[2],
+                    'account_type': row[3],
+                    'date': row[4],
+                    'description': row[5]
+                })
+                    
+            request.session['bulk_transactions'] = transactions
+            return render(request, 'transactions/bulk_confirm.html', {'transactions':transactions})
+        except json.JSONDecodeError:
+            return redirect('bulk_transaction_entry')
+        
+    return redirect('bulk_transaction_entry')
+
+@login_required
+def bulk_transaction_save(request):
+    if 'bulk_transactions' in request.session:
+        transactions_data = request.session.pop('bulk_transactions')
+        transactions = [Transaction(user=request.user, **data) for data in transactions_data]
+        Transaction.objects.bulk_create(transactions)
+    
+    return redirect('top')
