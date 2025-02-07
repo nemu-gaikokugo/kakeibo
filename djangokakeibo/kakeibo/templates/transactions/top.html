@@ -3,7 +3,10 @@
 {% block main%}
 <div class="welcome">
     <h1>ようこそ家計簿へ</h1>
-    <a class="btn btn-primary" href="{% url 'transaction_new' %}">取引を追加する</a>
+    <div class="welcomeButtons">
+        <a class="btn btn-primary" href="{% url 'transaction_new' %}">取引を登録する</a>
+        <a class="btn btn-primary" href="{% url 'bulk_transaction_entry' %}">取引を一括登録する</a>
+    </div>
 </div>
 <h2>
     <a href="{% url 'top_by_month' previous_year previous_month %}" class="btn btn-outline-primary">

@@ -239,8 +239,28 @@ def bulk_transaction_confirm(request):
 @login_required
 def bulk_transaction_save(request):
     if 'bulk_transactions' in request.session:
+        # セッションから取引データを取得
         transactions_data = request.session.pop('bulk_transactions')
-        transactions = [Transaction(user=request.user, **data) for data in transactions_data]
+
+        # 取得した取引データをDjangoが読み取り可能な形に変換
+        transactions = []
+        for data in transactions_data:
+            category_value=data.get('category')
+            currency_value=data.get('currency')
+            account_type_value=data.get('account_type')
+
+            transaction = Transaction(
+                user=request.user,
+                category=Category.objects.filter(name=category_value).first(),
+                amount=data.get('amount'),
+                currency=Currency.objects.filter(name=currency_value).first(),
+                account_type=AccountType.objects.filter(name=account_type_value).first(),
+                date=data.get('date'),
+                description=data.get('description')
+            )
+            transactions.append(transaction)
+
+        # リスト形式でDBへ一挙に登録
         Transaction.objects.bulk_create(transactions)
     
     return redirect('top')

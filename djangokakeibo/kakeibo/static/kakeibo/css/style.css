@@ -10,3 +10,8 @@ main{
     display: flex;
     flex-direction: column;
 }
+
+.welcomeButtons{
+    display: inline-block;
+    margin-right: 10px;
+}
