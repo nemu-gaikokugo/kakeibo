@@ -82,6 +82,9 @@
 $(document).ready(function() {
     $('#transactionTable').DataTable({
         "order": [[5, "asc"]],  // 取引日をデフォルトで降順ソート
+        "columnDefs": [
+            { "type": "date", "targets": 5 }  // 取引日の列を日付として認識
+        ],
         "paging": false,         // ページネーションを無効化
         "searching": false,      // 検索機能を無効化
         "info": false,           // 件数情報を非表示
