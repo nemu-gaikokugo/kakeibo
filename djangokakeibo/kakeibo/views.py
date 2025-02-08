@@ -273,40 +273,65 @@ def compare_balance(request):
     
     # 所持している現金情報の取得
     cash_holdings = CashHolding.objects.filter(user=request.user, currency=default_currency)
-    print(f"きゃっしゅほおるでぃんぐす：{cash_holdings}")
+    
     # 所持している現金の初期値（値がなければ0）
     cash_data = {
         f"denomination_{holding.denomination.value}": holding.quantity for holding in cash_holdings
     }
-    print(f"きゃっしゅでえた：{cash_data}")
+    
     # 現金以外の所持金の初期値（値がなければ0）
     account_balances = AccountBalance.objects.filter(user=request.user, currency=default_currency)
-    print(f"あかうんとばらんす：{account_balances}")
+    
     account_data = {
         balance.account_type.name: balance.balance for balance in account_balances
     }
-    print(f"あかうんとでえた：{account_data}")
+    
     total_entered = 0
     total_balance = sum(t.amount for t in Transaction.objects.filter(user=request.user, date__lt=calculate_end_of_month(now().date())))
     
-    # 入力フォーム処理
+    # 入力フォームのボタンを押した場合（ユーザーがフォームに入力した場合を想定）
     if request.method == 'POST':
+        # フォームに入力された現金の枚数を取得
         cash_form = CompareCashBalanceForm(request.POST)
+        # ユーザーが入力した現金の金額の合計を計算
         if cash_form.is_valid():
-            # ユーザーが入力した金額の合計を計算
             for denomination in Denomination.objects.filter(currency=default_currency):
                 denomination_value = denomination.value
                 entered_value = cash_form.cleaned_data.get(f'denomination_{denomination_value}', 0) or 0
                 total_entered += denomination_value * entered_value
-
-            print("ここまで来てる4")
+                # CashHolding のデータが既にある場合は更新、なければ作成
+                cash_holding, created = CashHolding.objects.get_or_create(
+                    user=request.user,
+                    currency=default_currency,
+                    denomination=denomination,
+                    defaults={'quantity': entered_value}
+                )
+                if not created:
+                    cash_holding.quantity = entered_value
+                    cash_holding.save()
         
+        # フォームに入力された口座類の残高を取得
         account_form = CompareAccountsBalanceForm(request.POST)
+        # ユーザーが入力した口座類の残高の合計を計算
         if account_form.is_valid():
             for account_type in AccountType.objects.all():
                 entered_value = account_form.cleaned_data.get(account_type.name) or 0
                 total_entered += entered_value
+                # AccountBalance のデータが既にある場合は更新、なければ作成
+                account_balance, created = AccountBalance.objects.get_or_create(
+                    user=request.user,
+                    currency=default_currency,
+                    account_type=account_type,
+                    defaults={'balance': entered_value}
+                )
+                if not created:
+                    account_balance.balance = entered_value
+                    account_balance.save()
+
+
+    # リンクを押して遷移したりURL直打ちで遷移してきた場合
     else:
+        # データベースから前回入力した値を取得
         cash_form = CompareCashBalanceForm(initial=cash_data)
         account_form = CompareAccountsBalanceForm(initial=account_data)
 
@@ -314,7 +339,7 @@ def compare_balance(request):
         for denomination in Denomination.objects.filter(currency=default_currency):
             for cash_holding in CashHolding.objects.filter(user=request.user, currency=default_currency, denomination=denomination):
                 total_entered += denomination.value * cash_holding.quantity
-        # 前回入力した口座等残高の総和を計算
+        # 前回入力した口座類の残高の総和を計算
         for account_balance in AccountBalance.objects.filter(user=request.user, currency=default_currency):
             total_entered += account_balance.balance
                 

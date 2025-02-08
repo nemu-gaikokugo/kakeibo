@@ -23,7 +23,7 @@ class DenominationAdmin(admin.ModelAdmin):
     list_display = ('currency', 'value', 'denomination_type')
 
 class CashHoldingAdmin(admin.ModelAdmin):
-    list_display = ('user', 'currency', 'denomination', 'quantity')
+    list_display = ('user', 'currency', 'denomination', 'quantity', 'created_at', 'updated_at')
 
 class AccountBalanceAdmin(admin.ModelAdmin):
     list_display = ('user', 'account_type', 'currency', 'balance', 'created_at', 'updated_at')
