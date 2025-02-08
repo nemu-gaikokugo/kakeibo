@@ -36,6 +36,9 @@ class Transaction(models.Model):
     account_type = models.ForeignKey(AccountType, on_delete=models.SET_NULL, null=True)
     date = models.DateField()
     description = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField("作成日", auto_now_add=True)
+    updated_at = models.DateTimeField("更新日", auto_now=True)
+
 
     def __str__(self):
         return f"{self.user} - {self.category} - {self.amount}"
@@ -44,6 +47,8 @@ class Denomination(models.Model):
     currency = models.ForeignKey(Currency, related_name='denominations', on_delete=models.CASCADE)
     value = models.IntegerField()  # 札や硬貨の金額（例：10000, 5000, 1000）
     denomination_type = models.CharField(max_length=10, choices=[('bill', '札'), ('coin', '硬貨')])
+    # created_at = models.DateTimeField("作成日", auto_now_add=True)
+    # updated_at = models.DateTimeField("更新日", auto_now=True)
 
     def __str__(self):
         return f"{self.currency.symbol} {self.value} - {self.denomination_type}"
@@ -53,7 +58,20 @@ class CashHolding(models.Model):
     currency = models.ForeignKey(Currency, on_delete=models.CASCADE)  # 通貨
     denomination = models.ForeignKey(Denomination, on_delete=models.CASCADE)  # 金種
     quantity = models.PositiveIntegerField()  # 所持金額（その金種の枚数）
+    created_at = models.DateTimeField("作成日", auto_now_add=True)
+    updated_at = models.DateTimeField("更新日", auto_now=True)
+
 
     def __str__(self):
         return f"{self.user.username} - {self.currency.symbol} {self.denomination.value} x {self.quantity}"
     
+class AccountBalance(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    account_type = models.ForeignKey(AccountType, on_delete=models.CASCADE)
+    currency = models.ForeignKey(Currency, on_delete=models.CASCADE)
+    balance = models.DecimalField(max_digits=24, decimal_places=2)
+    created_at = models.DateTimeField("作成日", auto_now_add=True)
+    updated_at = models.DateTimeField("更新日", auto_now=True)
+
+    def __str__(self):
+        return f"{self.user.username} - {self.account_type.name}: {self.balance} {self.currency.name}"

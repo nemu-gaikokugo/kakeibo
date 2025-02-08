@@ -5,7 +5,7 @@ from django.utils.timezone import now
 from django.core.exceptions import ValidationError
 from django.db.models import Sum, F
 from datetime import datetime, date, timedelta
-from kakeibo.models import Transaction, Category, Currency, AccountType, Denomination, CashHolding
+from kakeibo.models import Transaction, Category, Currency, AccountType, Denomination, CashHolding, AccountBalance
 from kakeibo.forms import TransactionForm, CompareCashBalanceForm, CompareAccountsBalanceForm
 import csv
 import json
@@ -273,25 +273,28 @@ def compare_balance(request):
     
     # 所持している現金情報の取得
     cash_holdings = CashHolding.objects.filter(user=request.user, currency=default_currency)
-    print(cash_holdings)
+    print(f"きゃっしゅほおるでぃんぐす：{cash_holdings}")
     # 所持している現金の初期値（値がなければ0）
     cash_data = {
-        denomination.value: cash_holdings.filter(denomination=denomination).first().quantity if cash_holdings.filter(denomination=denomination).exists() else 0
-        for denomination in Denomination.objects.filter(currency=default_currency)
+        f"denomination_{holding.denomination.value}": holding.quantity for holding in cash_holdings
     }
-    print(cash_data)
+    print(f"きゃっしゅでえた：{cash_data}")
     # 現金以外の所持金の初期値（値がなければ0）
-    account_data = {account.name: 0 for account in AccountType.objects.all()}
-    print(account_data)
-    
+    account_balances = AccountBalance.objects.filter(user=request.user, currency=default_currency)
+    print(f"あかうんとばらんす：{account_balances}")
+    account_data = {
+        balance.account_type.name: balance.balance for balance in account_balances
+    }
+    print(f"あかうんとでえた：{account_data}")
     total_entered = 0
     total_balance = sum(t.amount for t in Transaction.objects.filter(user=request.user, date__lt=calculate_end_of_month(now().date())))
+    
     # 入力フォーム処理
     if request.method == 'POST':
         cash_form = CompareCashBalanceForm(request.POST)
         if cash_form.is_valid():
             # ユーザーが入力した金額の合計を計算
-            for denomination in Denomination.objects.all():
+            for denomination in Denomination.objects.filter(currency=default_currency):
                 denomination_value = denomination.value
                 entered_value = cash_form.cleaned_data.get(f'denomination_{denomination_value}', 0) or 0
                 total_entered += denomination_value * entered_value
@@ -306,6 +309,15 @@ def compare_balance(request):
     else:
         cash_form = CompareCashBalanceForm(initial=cash_data)
         account_form = CompareAccountsBalanceForm(initial=account_data)
+
+        # 前回入力した現金の所持金の総和を計算
+        for denomination in Denomination.objects.filter(currency=default_currency):
+            for cash_holding in CashHolding.objects.filter(user=request.user, currency=default_currency, denomination=denomination):
+                total_entered += denomination.value * cash_holding.quantity
+        # 前回入力した口座等残高の総和を計算
+        for account_balance in AccountBalance.objects.filter(user=request.user, currency=default_currency):
+            total_entered += account_balance.balance
+                
     
     # 差額計算
     difference = total_balance - total_entered
