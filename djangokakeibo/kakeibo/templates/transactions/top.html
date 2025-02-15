@@ -44,7 +44,7 @@
             <th class="{% if transaction.amount >= 0 %}text-success{% else %}text-danger{% endif %}">{{ transaction.amount }}</th>
             <th>{{ transaction.currency }}</th>
             <th>{{ transaction.account_type }}</th>
-            <th>{{ transaction.date }}</th>
+            <th>{{ transaction.date|date:"Y-m-d" }}</th>
             <th>{{ transaction.description }}</th>                    
         </tr>
         {% endfor %}
@@ -81,7 +81,7 @@
 <script>
 $(document).ready(function() {
     $('#transactionTable').DataTable({
-        "order": [[5, "asc"]],  // 取引日をデフォルトで降順ソート
+        "order": [[5, "asc"]],  // 取引日をデフォルトで昇順ソート
         "columnDefs": [
             { "type": "date", "targets": 5 }  // 取引日の列を日付として認識
         ],
