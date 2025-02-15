@@ -124,9 +124,13 @@ def transaction_summary(user,year,month):
 
 # CSVファイルエクスポート用ページ
 def export_transactions(request):
+
+    # 現在時刻取得（ファイル名用）
+    dt_now = datetime.now().strftime('%Y%m%d%H%M%S')
+    
     # ヘッダーを設定し、CSVファイルとしてレスポンスを作成
     response = HttpResponse(content_type='text/csv')
-    response['Content-Disposition'] = 'attachment; filename="transactions.csv"'
+    response['Content-Disposition'] = f'attachment; filename="{dt_now}_{request.user}_transactions.csv"'
 
     # CSVの出力先をresponseに設定
     writer = csv.writer(response)
