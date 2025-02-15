@@ -15,15 +15,26 @@ class TransactionForm(forms.ModelForm):
         }
 
 class CompareCashBalanceForm(forms.Form):
-    # Denominationごとにフィールドを作成
-    # 各金種（例：10000円、5000円など）ごとの入力欄を定義
-    for denomination in Denomination.objects.all():
-        locals()[f'denomination_{denomination.value}'] = forms.IntegerField(
-            initial=0,
-            required=True,
-            label=f"{denomination.value}円",
-            widget=forms.NumberInput(attrs={'placeholder': '枚数を入力'})
-        )
+    def __init__(self, *args, currency=None, **kwargs):
+        """
+        currency: フォーム生成時に渡す通貨（例: "円"）
+        """
+        super().__init__(*args, **kwargs)
+
+        # currency に応じて Denomination を取得し、動的にフィールドを追加
+        if currency:
+            denominations = Denomination.objects.filter(currency=currency)  # 通貨ごとの金種
+        else:
+            denominations = Denomination.objects.all()  # 通貨指定なしなら全て
+
+        for denomination in denominations:
+            field_name = f'denomination_{denomination.value}'
+            self.fields[field_name] = forms.IntegerField(
+                initial=0,
+                required=True,
+                label=f"{denomination.value} {denomination.currency}",
+                widget=forms.NumberInput(attrs={'placeholder': '枚数を入力'})
+            )
 
 class CompareAccountsBalanceForm(forms.Form):
     for account_type in AccountType.objects.all():

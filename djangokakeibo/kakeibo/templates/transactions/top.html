@@ -23,6 +23,16 @@
         <button type="submit" class="btn btn-primary">CSVファイルをダウンロードする</button>
     </form>
 </h2>
+<ul class="nav nav-tabs">
+    {% for currency in currencies %}
+        <li class="nav-item">
+            <a class="nav-link {% if currency.name == selected_currency.name %}active{% endif %}"
+            href="?currency={{ currency.name }}">
+            {{ currency.name }}
+        </a>
+        </li>
+    {% endfor %}
+</ul>
 {% if transactions %}
 <table id="transactionTable" class="table table-striped table-hover">
     <thead>
@@ -57,22 +67,22 @@
     <tbody>
         <tr>
             <th class="text-start">今月の収入</th>
-            <td class="text-end text-success">¥{{ summary.monthly_income }}</td>
+            <td class="text-end text-success">{{ selected_currency.symbol }}{{ summary.monthly_income }}</td>
         </tr>
         <tr>
             <th class="text-start">今月の支出</th>
-            <td class="text-end text-danger">¥{{ summary.monthly_expense }}</td>
+            <td class="text-end text-danger">{{ selected_currency.symbol }}{{ summary.monthly_expense }}</td>
         </tr>
         <tr>
             <th class="text-start">今月の収支</th>
             <td class="text-end {% if summary.monthly_balance >= 0 %}text-success{% else %}text-danger{% endif %}">
-                ¥{{ summary.monthly_balance }}
+                {{ selected_currency.symbol }}{{ summary.monthly_balance }}
             </td>
         </tr>
         <tr>
             <th class="text-start">累計残金</th>
             <td class="text-end fw-bold {% if summary.total_balance >= 0 %}text-success{% else %}text-danger{% endif %}">
-                ¥{{ summary.total_balance }}
+                {{ selected_currency.symbol }}{{ summary.total_balance }}
             </td>
         </tr>
     </tbody>

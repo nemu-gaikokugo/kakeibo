@@ -68,11 +68,21 @@ def top(request, year=None, month=None):
     else:
         end_of_month = date(year, month+1, 1)
 
+    # 登録されている通貨を取得
+    currencies = Currency.objects.filter()
+    # →現時点で通貨モデルにはuserカラムが存在していない
+    # →ユーザーが自分で通貨を登録できるようにするため、今後userカラムを追加する
+
+    # 初期表示する通貨を取得（現時点では円をデフォルトとする（そのうちDBからデフォルト値を持ってくるようにする））
+    selected_currency_on_query = request.GET.get("currency", "円")
+    selected_currency = Currency.objects.filter(name=selected_currency_on_query).first()
+    
     # 自身の取引かつ今月の取引のみフィルター
     transactions = Transaction.objects.filter(
         user=request.user,
         date__gte=start_of_month,
-        date__lt=end_of_month
+        date__lt=end_of_month,
+        currency__name=selected_currency_on_query
         )
     
     # 前月・翌月の計算
@@ -84,7 +94,7 @@ def top(request, year=None, month=None):
 
     context = {
         "transactions": transactions,
-        "summary": transaction_summary(request.user, year, month),
+        "summary": transaction_summary(request.user, year, month,selected_currency.name),
         "current_month": month,
         "current_year": year,
         "previous_month": previous_month.month,
@@ -92,35 +102,12 @@ def top(request, year=None, month=None):
         "next_month": next_month.month,
         "next_year": next_month.year,
         "is_latest_month": is_latest_month,
+        "selected_currency": selected_currency,
+        "currencies": currencies,
         }
     
     return render(request, "transactions/top.html", context)
 
-# 収支計算用関数
-def transaction_summary(user,year,month):
-
-    # 今月のデータを取得
-    start_of_month = datetime(year, month, 1).date()
-    if month == 12:
-        end_of_month = date(year+1, 1, 1)
-    else:
-        end_of_month = date(year, month+1, 1)
-    monthly_transactions = Transaction.objects.filter(user=user, date__gte=start_of_month, date__lt=end_of_month)
-
-    # 収入と支出を計算（収入はプラス、支出はマイナスと仮定）
-    monthly_income = sum(t.amount for t in monthly_transactions if t.amount > 0)
-    monthly_expense = sum(t.amount for t in monthly_transactions if t.amount < 0)
-    monthly_balance = monthly_income + monthly_expense  # 今月の収支
-
-    # 累計残金（表示期間までの合計）
-    total_balance = sum(t.amount for t in Transaction.objects.filter(user=user, date__lt=end_of_month))
-
-    return {
-        'monthly_income': monthly_income,
-        'monthly_expense': monthly_expense,
-        'monthly_balance': monthly_balance,
-        'total_balance': total_balance,
-    }
 
 # CSVファイルエクスポート用ページ
 def export_transactions(request):
@@ -273,10 +260,14 @@ def bulk_transaction_save(request):
 @login_required
 def compare_balance(request):
     # デフォルトの通貨は円とする
-    default_currency = Currency.objects.filter(name="円").first()
+    selected_currency_on_query = request.GET.get("currency", "円")
+    selected_currency = Currency.objects.filter(name=selected_currency_on_query).first()
+    print(f"せれくてぃっどかれんしい：{selected_currency.name}")
+    # 全通貨の情報を取得
+    currencies = Currency.objects.all()
     
     # 所持している現金情報の取得
-    cash_holdings = CashHolding.objects.filter(user=request.user, currency=default_currency)
+    cash_holdings = CashHolding.objects.filter(user=request.user, currency=selected_currency)
     
     # 所持している現金の初期値（値がなければ0）
     cash_data = {
@@ -284,29 +275,36 @@ def compare_balance(request):
     }
     
     # 現金以外の所持金の初期値（値がなければ0）
-    account_balances = AccountBalance.objects.filter(user=request.user, currency=default_currency)
+    account_balances = AccountBalance.objects.filter(user=request.user, currency=selected_currency)
     
     account_data = {
         balance.account_type.name: balance.balance for balance in account_balances
     }
     
     total_entered = 0
-    total_balance = sum(t.amount for t in Transaction.objects.filter(user=request.user, date__lt=calculate_end_of_month(now().date())))
-    
+    # 累計残金の取得
+    total_balance = sum(
+        t.amount for t in Transaction.objects.filter(
+            user=request.user,
+            date__lt=calculate_end_of_month(now().date()),
+            currency__name=selected_currency,
+            )
+        )
+
     # 入力フォームのボタンを押した場合（ユーザーがフォームに入力した場合を想定）
     if request.method == 'POST':
         # フォームに入力された現金の枚数を取得
-        cash_form = CompareCashBalanceForm(request.POST)
+        cash_form = CompareCashBalanceForm(request.POST,currency=selected_currency)
         # ユーザーが入力した現金の金額の合計を計算
         if cash_form.is_valid():
-            for denomination in Denomination.objects.filter(currency=default_currency):
+            for denomination in Denomination.objects.filter(currency=selected_currency):
                 denomination_value = denomination.value
                 entered_value = cash_form.cleaned_data.get(f'denomination_{denomination_value}', 0) or 0
                 total_entered += denomination_value * entered_value
                 # CashHolding のデータが既にある場合は更新、なければ作成
                 cash_holding, created = CashHolding.objects.get_or_create(
                     user=request.user,
-                    currency=default_currency,
+                    currency=selected_currency,
                     denomination=denomination,
                     defaults={'quantity': entered_value}
                 )
@@ -324,27 +322,25 @@ def compare_balance(request):
                 # AccountBalance のデータが既にある場合は更新、なければ作成
                 account_balance, created = AccountBalance.objects.get_or_create(
                     user=request.user,
-                    currency=default_currency,
+                    currency=selected_currency,
                     account_type=account_type,
                     defaults={'balance': entered_value}
                 )
                 if not created:
                     account_balance.balance = entered_value
                     account_balance.save()
-
-
     # リンクを押して遷移したりURL直打ちで遷移してきた場合
     else:
         # データベースから前回入力した値を取得
-        cash_form = CompareCashBalanceForm(initial=cash_data)
+        cash_form = CompareCashBalanceForm(initial=cash_data,currency=selected_currency)
         account_form = CompareAccountsBalanceForm(initial=account_data)
 
         # 前回入力した現金の所持金の総和を計算
-        for denomination in Denomination.objects.filter(currency=default_currency):
-            for cash_holding in CashHolding.objects.filter(user=request.user, currency=default_currency, denomination=denomination):
+        for denomination in Denomination.objects.filter(currency=selected_currency):
+            for cash_holding in CashHolding.objects.filter(user=request.user, currency=selected_currency, denomination=denomination):
                 total_entered += denomination.value * cash_holding.quantity
         # 前回入力した口座類の残高の総和を計算
-        for account_balance in AccountBalance.objects.filter(user=request.user, currency=default_currency):
+        for account_balance in AccountBalance.objects.filter(user=request.user, currency=selected_currency):
             total_entered += account_balance.balance
                 
     
@@ -359,8 +355,11 @@ def compare_balance(request):
         'total_balance': total_balance,
         'total_entered': total_entered,
         'difference': difference,
+        'selected_currency': selected_currency,
+        'currencies': currencies,
     })
 
+# 日付を入れるとその日が属する月の月末をdate型で返す関数
 def calculate_end_of_month(today):
     year = today.year
     month = today.month
@@ -372,3 +371,41 @@ def calculate_end_of_month(today):
         end_of_month = date(year, month+1, 1)
     
     return end_of_month
+
+# 収支計算用関数
+def transaction_summary(user,year,month,currency_name):
+
+    # 今月のデータを取得
+    start_of_month = datetime(year, month, 1).date()
+    if month == 12:
+        end_of_month = date(year+1, 1, 1)
+    else:
+        end_of_month = date(year, month+1, 1)
+    
+    # 月の取引一覧を取得
+    monthly_transactions = Transaction.objects.filter(
+        user=user,
+        date__gte=start_of_month,
+        date__lt=end_of_month,
+        currency__name=currency_name,
+        )
+
+    # 月の収入と支出を計算（収入はプラス、支出はマイナスと仮定）
+    monthly_income = sum(t.amount for t in monthly_transactions if t.amount > 0)
+    monthly_expense = sum(t.amount for t in monthly_transactions if t.amount < 0)
+    monthly_balance = monthly_income + monthly_expense  # 今月の収支
+
+    # 累計残金（表示期間までの合計）
+    all_transactions = Transaction.objects.filter(
+        user=user,
+        date__lt=end_of_month,
+        currency__name=currency_name,
+    )
+    total_balance = sum(t.amount for t in all_transactions)
+
+    return {
+        'monthly_income': monthly_income,
+        'monthly_expense': monthly_expense,
+        'monthly_balance': monthly_balance,
+        'total_balance': total_balance,
+    }

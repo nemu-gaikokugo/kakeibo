@@ -10,6 +10,16 @@
 </form> -->
 
 <div class="container my-4">
+    <ul class="nav nav-tabs">
+        {% for currency in currencies %}
+            <li class="nav-item">
+                <a class="nav-link {% if currency.name == selected_currency.name %}active{% endif %}"
+                href="?currency={{ currency.name }}">
+                {{ currency.name }}
+            </a>
+            </li>
+        {% endfor %}
+    </ul>
     <form method="post">
         {% csrf_token %}
         <div class="card border-secondary">
