@@ -5,7 +5,7 @@ from django.utils.timezone import now
 from django.core.exceptions import ValidationError
 from django.db.models import Sum, F
 from datetime import datetime, date, timedelta
-from kakeibo.models import Transaction, Category, Currency, AccountType, Denomination, CashHolding, AccountBalance
+from kakeibo.models import Transaction, Category, Currency, AccountType, Denomination, CashHolding, AccountBalance, ProductRecord
 from kakeibo.forms import TransactionForm, CompareCashBalanceForm, CompareAccountsBalanceForm
 import csv
 import json
@@ -44,11 +44,13 @@ def transaction_edit(request, transaction_id):
 @login_required
 def transaction_detail(request, transaction_id):
     transaction = get_object_or_404(Transaction, pk=transaction_id)
+    product_records = ProductRecord.objects.filter(transaction=transaction)
+    print(f"ぷろだくとれこーづ：{product_records}")
     
     if transaction.user != request.user:    # 他人の取引ページにアクセスするのを禁ずる
         raise Http404
     
-    return render(request, 'transactions/transaction_detail.html', {'transaction': transaction})
+    return render(request, 'transactions/transaction_detail.html', {'transaction': transaction, 'product_records': product_records})
 
 # トップページ（今月の取引を全て表示）
 @login_required
