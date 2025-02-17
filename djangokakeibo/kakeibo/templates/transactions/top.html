@@ -49,13 +49,13 @@
     <tbody>
         {% for transaction in transactions %}
         <tr>
-            <th><a href="{% url 'transaction_detail' transaction.transaction_id %}" >{{ transaction.transaction_id }}</a></th>
-            <th>{{ transaction.category }}</th>
-            <th class="{% if transaction.amount >= 0 %}text-success{% else %}text-danger{% endif %}">{{ transaction.amount }}</th>
-            <th>{{ transaction.currency }}</th>
-            <th>{{ transaction.account_type }}</th>
-            <th>{{ transaction.date|date:"Y-m-d" }}</th>
-            <th>{{ transaction.description }}</th>                    
+            <td><a href="{% url 'transaction_detail' transaction.transaction_id %}" >{{ transaction.transaction_id }}</a></td>
+            <td>{{ transaction.category }}</td>
+            <td class="{% if transaction.amount >= 0 %}text-success{% else %}text-danger{% endif %}">{{ transaction.amount }}</td>
+            <td>{{ transaction.currency }}</td>
+            <td>{{ transaction.account_type }}</td>
+            <td>{{ transaction.date|date:"Y-m-d" }}</td>
+            <td>{{ transaction.description }}</td>                    
         </tr>
         {% endfor %}
     </tbody>
