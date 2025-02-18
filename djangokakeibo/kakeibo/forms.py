@@ -1,5 +1,5 @@
 from django import forms
-from kakeibo.models import Transaction, Denomination, AccountType
+from kakeibo.models import Transaction, Denomination, AccountType, ProductRecord
 
 class TransactionForm(forms.ModelForm):
     class Meta:
@@ -44,3 +44,14 @@ class CompareAccountsBalanceForm(forms.Form):
                 required=True,
                 label=account_type.name
             )
+
+class ProductRecordForm(forms.ModelForm):
+    class Meta:
+        model = ProductRecord
+        fields = {'category', 'product', 'price', 'currency'}
+        labels = {
+            'category': 'カテゴリ',
+            'product': '商品名',
+            'price': '価格',
+            'currency': '通貨',
+        }

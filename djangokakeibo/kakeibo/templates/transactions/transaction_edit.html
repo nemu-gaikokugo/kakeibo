@@ -3,44 +3,73 @@
 
 {% block main %}
 <div class="container my-4">
-    <div class="card border-secondary">
-        <div class="card-header bg-light">
-            <h4 class="mb-0">取引の編集</h4>
-        </div>
-        <form method="post">
-            {% csrf_token %}
+    <form method="post">
+        {% csrf_token %}
+        <div class="card border-secondary">
+            <div class="card-header bg-light">
+                <h4 class="mb-0">取引の編集</h4>
+            </div>
             <table class="table">
                 <tbody>
                     <tr>
-                        <td><label for="{{ form.category.id_for_label }}">カテゴリ</label></td>
-                        <td>{{ form.category }}</td>
+                        <td><label for="{{ transaction_form.category.id_for_label }}">カテゴリ</label></td>
+                        <td>{{ transaction_form.category }}</td>
                     </tr>
                     <tr>
-                        <td><label for="{{ form.amount.id_for_label }}">金額</label></td>
-                        <td>{{ form.amount }}</td>
+                        <td><label for="{{ transaction_form.amount.id_for_label }}">金額</label></td>
+                        <td>{{ transaction_form.amount }}</td>
                     </tr>
                     <tr>
-                        <td><label for="{{ form.currency.id_for_label }}">通貨</label></td>
-                        <td>{{ form.currency }}</td>
+                        <td><label for="{{ transaction_form.currency.id_for_label }}">通貨</label></td>
+                        <td>{{ transaction_form.currency }}</td>
                     </tr>
                     <tr>
-                        <td><label for="{{ form.account_type.id_for_label }}">資金形態</label></td>
-                        <td>{{ form.account_type }}</td>
+                        <td><label for="{{ transaction_form.account_type.id_for_label }}">資金形態</label></td>
+                        <td>{{ transaction_form.account_type }}</td>
                     </tr>
                     <tr>
-                        <td><label for="{{ form.date.id_for_label }}">取引日</label></td>
-                        <td>{{ form.date }}</td>
+                        <td><label for="{{ transaction_form.date.id_for_label }}">取引日</label></td>
+                        <td>{{ transaction_form.date }}</td>
                     </tr>
                     <tr>
-                        <td><label for="{{ form.description.id_for_label }}">説明</label></td>
-                        <td>{{ form.description }}</td>
+                        <td><label for="{{ transaction_form.description.id_for_label }}">説明</label></td>
+                        <td>{{ transaction_form.description }}</td>
                     </tr>
                 </tbody>
             </table>
-            <div class="card-footer text-right">
-                <button type="submit" class="btn btn-outline-secondary">保存</button>
+        </div>
+        <div class="card border-secondary">
+            <div class="card-header bg-light">
+                <h4 class="mb-0">商品の編集</h4>
             </div>
-        </form>
-    </div>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>カテゴリ</th>
+                        <th>商品名</th>
+                        <th>価格</th>
+                        <th>通貨</th>
+                    </tr>
+                </thead>
+                {{ product_records_formset.management_form }}
+                <tbody>
+                    {% for form in product_records_formset %}
+                        {% for hidden in form.hidden_fields %}
+                            {{ hidden }}
+                        {% endfor %}
+                    <tr>
+                        <td>{{ form.category }}</td>
+                        <td>{{ form.product }}</td>
+                        <td>{{ form.price }}</td>
+                        <td>{{ form.currency }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div class="card-footer text-right">
+            <button type="submit" class="btn btn-outline-secondary">保存</button>
+        </div>
+    </form>
 </div>
 {% endblock %}

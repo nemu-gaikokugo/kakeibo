@@ -4,9 +4,10 @@ from django.http import HttpResponseForbidden, Http404, HttpResponse
 from django.utils.timezone import now
 from django.core.exceptions import ValidationError
 from django.db.models import Sum, F
+from django.forms import modelformset_factory
 from datetime import datetime, date, timedelta
 from kakeibo.models import Transaction, Category, Currency, AccountType, Denomination, CashHolding, AccountBalance, ProductRecord
-from kakeibo.forms import TransactionForm, CompareCashBalanceForm, CompareAccountsBalanceForm
+from kakeibo.forms import TransactionForm, CompareCashBalanceForm, CompareAccountsBalanceForm, ProductRecordForm
 import csv
 import json
 
@@ -28,17 +29,30 @@ def transaction_new(request):
 @login_required
 def transaction_edit(request, transaction_id):
     transaction = get_object_or_404(Transaction, pk=transaction_id)
+    product_records = ProductRecord.objects.filter(transaction=transaction)
+    ProductRecordsFormset = modelformset_factory(ProductRecord, form=ProductRecordForm, extra=0)
+
     if transaction.user_id != request.user.id:
         return HttpResponseForbidden("この取引の編集は許可されていません。")
 
     if request.method == "POST":
-        form = TransactionForm(request.POST, instance=transaction)
-        if form.is_valid():
-            form.save()
-            return redirect('top')
+        transaction_form = TransactionForm(request.POST, instance=transaction)
+        product_records_formset = ProductRecordsFormset(request.POST, queryset=product_records)
+        # print(f"とらんざくしょんふぉおむ：{transaction_form}")
+        # print(f"ぷろだくとれこおづふぉおむせっと：{product_records_formset}")
+        print(f"えらあず：{product_records_formset.errors}")
+        if transaction_form.is_valid() and product_records_formset.is_valid():
+            transaction_form.save()
+            product_records_formset.save()
+            return redirect('transaction_detail',transaction_id=transaction.pk)
     else:
-        form = TransactionForm(instance=transaction)
-    return render(request, 'transactions/transaction_edit.html', {'form': form})
+        transaction_form = TransactionForm(instance=transaction)
+        product_records_formset = ProductRecordsFormset(queryset=product_records)
+    return render(request, 'transactions/transaction_edit.html', {
+        'transaction_form': transaction_form,
+        'product_records': product_records,
+        'product_records_formset': product_records_formset,
+        })
 
 # 取引詳細ページ
 @login_required
