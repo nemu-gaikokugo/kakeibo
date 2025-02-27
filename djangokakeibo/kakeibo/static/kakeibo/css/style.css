@@ -2,6 +2,10 @@ main{
     padding: 2rem 0;
 }
 
+body {
+    overflow-x: hidden;
+}
+
 .welcome {
     padding: 3rem 0;
     margin-bottom: 2rem;

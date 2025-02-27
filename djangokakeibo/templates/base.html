@@ -3,6 +3,7 @@
 <html>
     <head>
         <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
         <title>家計簿</title>
         {% bootstrap_css %}
         {% bootstrap_javascript %}
@@ -13,42 +14,64 @@
         {% block extraheader %}{% endblock %}
     </head>
     <body>
-        <nav class="navbar navbar-expand flex-md-row navbar-dark bg-dark">
-            <div class="container justify-content-between">
-                <a href="/" class="navbar-brand">家計簿</a>
-                <ul class="navbar-nav mr-md-2">
-                    {% if user.is_authenticated %}
-                    <li class="navbar-text">ようこそ{{ request.user.username }}さん</li>
-                    <li class="nav-item">
-                        <!-- Django 5.0以降、LogooutView()がGET送信を受け付けなくなったため変更 -->
-                        <!-- <a class="nav-link" href="{% url 'logout' %}">
-                            ログアウト
-                        </a> -->
+        <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+            <div class="container-fluid">
+                
+                <!-- ロゴ -->
+                <a class="navbar-brand" href="{% url 'top' %}">家計簿</a>
+    
+                <!-- トグルボタン -->
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+
+                <!-- トグルボタンの中身 -->
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav">
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'transaction_new' %}">取引を登録</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'bulk_transaction_entry' %}">取引一括登録</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'products_list' %}">商品一覧</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'compare_balance' %}">所持金比較</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'export_transactions' %}">CSVダウンロード</a>
+                        </li>
+                    </ul>
+                    <!-- 右端に配置する部分 -->
+                    {% if request.user.is_authenticated %}
+                    <div class="d-flex align-items-center ms-auto">
+                        <span class="navbar-text">ようこそ {{ request.user.username }} さん</span>
                         <form action="{% url 'logout' %}" method="post">
                             {% csrf_token %}
                             <button type="submit" class="btn btn-outline-light btn-sm ms-2">
                                 ログアウト
                             </button>
                         </form>
-                    </li>
+                    </div>
                     {% else %}
-                    <li class="nav-item">
-                        <!-- <a class="nav-link" href="{% url 'login' %}">
-                            ログイン
-                        </a> -->
+                    <div>
                         <form action="{% url 'login' %}" method="post">
                             {% csrf_token %}
                             <button type="submit" class="btn btn-outline-light btn-sm ms-2">
                                 ログイン
                             </button>
                         </form>
-                    </li>
+                    </div>
                     {% endif %}
-                </ul>
+                </div>
             </div>
         </nav>
+        
+        
         <main>
-            <div class="container">
+            <div class="container-fluid">
                 {% block main %}{% endblock %}
             </div>
         </main>
