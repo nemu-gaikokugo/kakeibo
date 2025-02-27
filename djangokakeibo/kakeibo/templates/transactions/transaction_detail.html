@@ -53,16 +53,14 @@
                         <th>カテゴリ</th>
                         <th>商品名</th>
                         <th>価格</th>
-                        <th>通貨</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for record in product_records %}
                     <tr>
                         <td>{{ record.category }}</td>
-                        <td>{{ record.product.name }}</td>
-                        <td>{{ record.price }}</td>
-                        <td>{{ record.currency }}</td>
+                        <td><a href="{% url 'product_detail' record.product.id %}">{{ record.product.name }}</a></td>
+                        <td>{{ record.price }} {{ transaction.currency }}</td>
                     </tr>
                     {% endfor %}
                 </tbody>

@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block main %}
+
+<h2>
+    商品一覧
+</h2>
+
+{% if products_list %}
+<table id="transactionTable" class="table table-striped table-hover">
+    <thead>
+        <tr>
+            <th>名前</th>
+            <th>参考情報</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for product in products_list %}
+        <tr>
+            <td><a href="{% url 'product_detail' product.id %}">{{ product.name }}</a></td>
+            <td>{{ product.reference }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p>まだ商品が登録されていません。</p>
+{% endif %}
+
+{% endblock %}

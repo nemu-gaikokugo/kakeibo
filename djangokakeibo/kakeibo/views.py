@@ -6,8 +6,10 @@ from django.core.exceptions import ValidationError
 from django.db.models import Sum, F
 from django.forms import modelformset_factory
 from datetime import datetime, date, timedelta
-from kakeibo.models import Transaction, Category, Currency, AccountType, Denomination, CashHolding, AccountBalance, ProductRecord
-from kakeibo.forms import TransactionForm, CompareCashBalanceForm, CompareAccountsBalanceForm, ProductRecordForm
+from kakeibo.models import Transaction, Category, Currency, AccountType
+from kakeibo.models import Denomination, CashHolding, AccountBalance, ProductRecord
+from kakeibo.models import Product
+from kakeibo.forms import TransactionForm, CompareCashBalanceForm, CompareAccountsBalanceForm, ProductRecordForm, ProductForm
 import csv
 import json
 
@@ -32,26 +34,43 @@ def transaction_edit(request, transaction_id):
     product_records = ProductRecord.objects.filter(transaction=transaction)
     ProductRecordsFormset = modelformset_factory(ProductRecord, form=ProductRecordForm, extra=0)
 
+    # 他人の取引詳細ページへのアクセスを禁ずる
     if transaction.user_id != request.user.id:
         return HttpResponseForbidden("この取引の編集は許可されていません。")
 
+    errors = []
+    # フォーム入力後「保存」ボタンを押した場合の処理
     if request.method == "POST":
         transaction_form = TransactionForm(request.POST, instance=transaction)
         product_records_formset = ProductRecordsFormset(request.POST, queryset=product_records)
         # print(f"とらんざくしょんふぉおむ：{transaction_form}")
         # print(f"ぷろだくとれこおづふぉおむせっと：{product_records_formset}")
-        print(f"えらあず：{product_records_formset.errors}")
+        # print(f"えらあず：{product_records_formset.errors}")
         if transaction_form.is_valid() and product_records_formset.is_valid():
-            transaction_form.save()
-            product_records_formset.save()
-            return redirect('transaction_detail',transaction_id=transaction.pk)
+            # print(f"でえた：{product_records_formset.data}")
+            # 商品の金額の総計を計算
+            total_price_of_products = sum(product.price for product in product_records_formset.get_queryset())
+
+            # 計算した額がtransactionの金額に一致した場合のみ値をDBへ保存し取引詳細ページへ遷移する
+            # print(f"げっといにしゃるふぉお：{transaction_form.instance.amount}")
+            if total_price_of_products == transaction_form.instance.amount:
+                transaction_form.save()
+                product_records_formset.save()
+                return redirect('transaction_detail',transaction_id=transaction.pk)
+            # 一致しなければエラーメッセージとともにeditページに戻る
+            errors.append(f"取引の金額と商品の合計金額が一致していません。取引、商品のいずれかの金額が間違っています。(商品の合計金額：{total_price_of_products})")
+        else:
+            errors.append(product_records_formset.errors)
+    # URL直打ちやリンクを踏んで飛んできた場合の処理
     else:
+        # データベースから値を持ってきてフォームにセット
         transaction_form = TransactionForm(instance=transaction)
         product_records_formset = ProductRecordsFormset(queryset=product_records)
     return render(request, 'transactions/transaction_edit.html', {
         'transaction_form': transaction_form,
         'product_records': product_records,
         'product_records_formset': product_records_formset,
+        'errors': errors,
         })
 
 # 取引詳細ページ
@@ -374,6 +393,57 @@ def compare_balance(request):
         'selected_currency': selected_currency,
         'currencies': currencies,
     })
+
+@login_required
+def products_list(request):
+    products_list = Product.objects.filter(user=request.user)
+
+    return render(request, 'transactions/products_list.html', {
+        'products_list': products_list,
+    })
+
+
+@login_required
+def product_detail(request, product_id):
+    product = Product.objects.filter(user=request.user, id=product_id).first()
+
+    if product.user != request.user:
+        raise Http404
+    
+    product_records = ProductRecord.objects.filter(user=request.user, product=product)
+
+    return render(request, 'transactions/product_detail.html', {
+        'product': product,
+        'product_records': product_records,
+    })
+
+@login_required
+def product_edit(request, product_id):
+    product = Product.objects.filter(user=request.user, id=product_id).first()
+
+    # 他人の取引詳細ページへのアクセスを禁ずる
+    if product.user_id != request.user.id:
+        return HttpResponseForbidden("この取引の編集は許可されていません。")
+
+    errors = []
+    # フォーム入力後「保存」ボタンを押した場合の処理
+    if request.method == "POST":
+        product_form = ProductForm(request.POST, instance=product)
+
+        if product_form.is_valid():
+            product_form.save()
+            return redirect('product_detail',product_id=product.pk)
+        else:
+            errors.append(product_form.errors)
+    # URL直打ちやリンクを踏んで飛んできた場合の処理
+    else:
+        # データベースから値を持ってきてフォームにセット
+        product_form = ProductForm(instance=product)
+
+    return render(request, 'transactions/product_edit.html', {
+        'product_form': product_form,
+        'errors': errors,
+        })
 
 # 日付を入れるとその日が属する月の月末をdate型で返す関数
 def calculate_end_of_month(today):

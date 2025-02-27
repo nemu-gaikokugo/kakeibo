@@ -39,7 +39,7 @@ class ProductAdmin(admin.ModelAdmin):
     list_display = ('user', 'name', 'reference', 'created_at', 'updated_at')
 
 class ProductRecordAdmin(admin.ModelAdmin):
-    list_display = ('user', 'transaction', 'product', 'price', 'currency', 'created_at', 'updated_at')
+    list_display = ('user', 'transaction', 'product', 'price', 'created_at', 'updated_at')
 
 class ConsumptionTaxAdmin(admin.ModelAdmin):
     list_display = ('user', 'name', 'tax_rate', 'created_at', 'updated_at')

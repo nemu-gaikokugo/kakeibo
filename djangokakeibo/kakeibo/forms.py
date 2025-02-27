@@ -1,5 +1,5 @@
 from django import forms
-from kakeibo.models import Transaction, Denomination, AccountType, ProductRecord
+from kakeibo.models import Transaction, Denomination, AccountType, ProductRecord, Product
 
 class TransactionForm(forms.ModelForm):
     class Meta:
@@ -48,10 +48,18 @@ class CompareAccountsBalanceForm(forms.Form):
 class ProductRecordForm(forms.ModelForm):
     class Meta:
         model = ProductRecord
-        fields = {'category', 'product', 'price', 'currency'}
+        fields = {'category', 'product', 'price'}
         labels = {
             'category': 'カテゴリ',
             'product': '商品名',
             'price': '価格',
-            'currency': '通貨',
+        }
+
+class ProductForm(forms.ModelForm):
+    class Meta:
+        model = Product
+        fields = ('name', 'reference')
+        labels = {
+            'name': '商品名',
+            'reference': '参考情報',
         }

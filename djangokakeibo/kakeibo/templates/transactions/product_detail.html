@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% load django_bootstrap5 %}
+
+{% block main %}
+<div class="container my-4">
+    <div class="card border-secondary">
+        <div class="card-header bg-light">
+            <h4 class="mb-0">商品詳細</h4>
+        </div>
+        <div class="card-body">
+            <table class="table table-bordered table-striped">
+                <tbody>
+                    <tr>
+                        <th>商品名</th>
+                        <td>{{ product.name }}</td>
+                    </tr>
+                    <tr>
+                        <th>参考情報</th>
+                        <td>{{ product.reference }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <form action="{% url 'product_edit' product.id %}">
+        <button type="submit" class="btn btn-outline-secondary">
+            編集
+        </button>
+    </form>
+    <div class="card border-secondary">
+        <div class="card-header bg-light">
+            <h4 class="mb-0">本商品の取引(購入)履歴</h4>
+        </div>
+        <div class="card-body">
+            <table class="table table-bordered table-striped">
+                <thead>
+                    <tr>
+                        <th>取引日(購入日)</th>
+                        <th>カテゴリ</th>
+                        <th>価格</th>
+                        <th>該当取引の詳細</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for record in product_records %}
+                    <tr>
+                        <td>{{ record.transaction.date }}</td>
+                        <td>{{ record.category }}</td>
+                        <td>{{ record.price }} {{ record.transaction.currency }}</td>
+                        <td><a href="{% url 'transaction_detail' record.transaction.transaction_id %}">詳細</a></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+<div class="card-footer text-right">
+
+</div>
+{% endblock %}
