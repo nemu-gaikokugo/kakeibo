@@ -8,14 +8,16 @@ from django.forms import modelformset_factory
 from datetime import datetime, date, timedelta
 from kakeibo.models import Transaction, Category, Currency, AccountType
 from kakeibo.models import Denomination, CashHolding, AccountBalance, ProductRecord
-from kakeibo.models import Product
+from kakeibo.models import Product, UserPreferences
 from kakeibo.forms import TransactionForm, CompareCashBalanceForm, CompareAccountsBalanceForm, ProductRecordForm, ProductForm
+from kakeibo.forms import UserPreferencesForm
 import csv
 import json
 
 # 取引登録ページ
 @login_required
 def transaction_new(request):
+    # 保存ボタンを押した場合
     if request.method == 'POST':
         form = TransactionForm(request.POST)
         if form.is_valid():
@@ -23,8 +25,17 @@ def transaction_new(request):
             transaction.user = request.user
             transaction.save()
             return redirect(transaction_detail,transaction_id=transaction.pk)
+    # 別ページからの遷移やURL直打ちでの遷移の時
     else:
-        form = TransactionForm()
+        # ユーザー設定をDBから取得
+        user_preferences = UserPreferences.objects.filter(user=request.user).first()
+        today = now().date()
+        # デフォルト値をフォームに挿入
+        form = TransactionForm(initial={
+            'currency': user_preferences.default_currency,
+            'account_type': user_preferences.default_account_type,
+            'date': today,
+        })
     return render(request, "transactions/transaction_new.html", {'form': form})
 
 # 取引編集ページ
@@ -109,7 +120,7 @@ def top(request, year=None, month=None):
     # →ユーザーが自分で通貨を登録できるようにするため、今後userカラムを追加する
 
     # 初期表示する通貨を取得（現時点では円をデフォルトとする（そのうちDBからデフォルト値を持ってくるようにする））
-    selected_currency_on_query = request.GET.get("currency", "円")
+    selected_currency_on_query = UserPreferences.objects.filter(user=request.user).first().default_currency
     selected_currency = Currency.objects.filter(name=selected_currency_on_query).first()
     
     # 自身の取引かつ今月の取引のみフィルター
@@ -402,7 +413,6 @@ def products_list(request):
         'products_list': products_list,
     })
 
-
 @login_required
 def product_detail(request, product_id):
     product = Product.objects.filter(user=request.user, id=product_id).first()
@@ -442,6 +452,36 @@ def product_edit(request, product_id):
 
     return render(request, 'transactions/product_edit.html', {
         'product_form': product_form,
+        'errors': errors,
+        })
+
+@login_required
+def user_preferences(request):
+    user_preferences = UserPreferences.objects.filter(user=request.user).first()
+
+    messages = []
+    errors = []
+    # フォーム入力後「保存」ボタンを押した場合の処理
+    if request.method == "POST":
+        user_preferences_form = UserPreferencesForm(request.POST, instance=user_preferences)
+        old_default_currency = user_preferences.default_currency
+        old_default_account_type = user_preferences.default_account_type
+
+        if user_preferences_form.is_valid():
+            messages.append("変更を保存しました。")
+            messages.append(f"デフォルト通貨：{old_default_currency} -> {user_preferences_form.cleaned_data.get('default_currency')}")
+            messages.append(f"デフォルト資金形態：{old_default_account_type} -> {user_preferences_form.cleaned_data.get('default_account_type')}")
+            user_preferences_form.save()
+        else:
+            errors.append(user_preferences_form.errors)
+    # URL直打ちやリンクを踏んで飛んできた場合の処理
+    else:
+        # データベースから値を持ってきてフォームにセット
+        user_preferences_form = UserPreferencesForm(instance=user_preferences)
+
+    return render(request, 'transactions/user_preferences.html', {
+        'user_preferences_form': user_preferences_form,
+        'messages': messages,
         'errors': errors,
         })
 

@@ -10,6 +10,7 @@ from kakeibo.models import Counterparty
 from kakeibo.models import Product
 from kakeibo.models import ProductRecord
 from kakeibo.models import ConsumptionTax
+from kakeibo.models import UserPreferences
 
 class CategoryAdmin(admin.ModelAdmin):
     list_display = ('name', 'user', 'created_at', 'updated_at')
@@ -44,6 +45,9 @@ class ProductRecordAdmin(admin.ModelAdmin):
 class ConsumptionTaxAdmin(admin.ModelAdmin):
     list_display = ('user', 'name', 'tax_rate', 'created_at', 'updated_at')
 
+class UserPreferencesAdmin(admin.ModelAdmin):
+    list_display = ('user', 'default_currency', 'default_account_type', 'created_at', 'updated_at')
+
 admin.site.register(Category, CategoryAdmin)
 admin.site.register(Currency, CurrencyAdmin)
 admin.site.register(Transaction, TransactionAdmin)
@@ -55,3 +59,4 @@ admin.site.register(Counterparty, CounterpartyAdmin)
 admin.site.register(Product, ProductAdmin)
 admin.site.register(ProductRecord, ProductRecordAdmin)
 admin.site.register(ConsumptionTax, ConsumptionTaxAdmin)
+admin.site.register(UserPreferences, UserPreferencesAdmin)

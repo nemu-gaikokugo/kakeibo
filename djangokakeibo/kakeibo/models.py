@@ -128,3 +128,13 @@ class ProductRecord(models.Model):
 
     def __str__(self):
         return self.product.name
+
+class UserPreferences(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    default_currency = models.ForeignKey(Currency, on_delete=models.CASCADE)
+    default_account_type = models.ForeignKey(AccountType, on_delete=models.CASCADE)
+    created_at = models.DateTimeField("作成日", auto_now_add=True)
+    updated_at = models.DateTimeField("更新日", auto_now=True)
+
+    def __str__(self):
+        return f"{self.user}"

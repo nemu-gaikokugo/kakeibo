@@ -1,5 +1,6 @@
 from django import forms
 from kakeibo.models import Transaction, Denomination, AccountType, ProductRecord, Product
+from kakeibo.models import UserPreferences
 
 class TransactionForm(forms.ModelForm):
     class Meta:
@@ -62,4 +63,13 @@ class ProductForm(forms.ModelForm):
         labels = {
             'name': '商品名',
             'reference': '参考情報',
+        }
+
+class UserPreferencesForm(forms.ModelForm):
+    class Meta:
+        model = UserPreferences
+        fields = ('default_currency', 'default_account_type')
+        labels = {
+            'default_currency': 'デフォルト通貨',
+            'default_account_type': 'デフォルト資金形態',
         }
