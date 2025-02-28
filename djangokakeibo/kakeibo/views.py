@@ -120,7 +120,7 @@ def top(request, year=None, month=None):
     # →ユーザーが自分で通貨を登録できるようにするため、今後userカラムを追加する
 
     # 初期表示する通貨を取得（現時点では円をデフォルトとする（そのうちDBからデフォルト値を持ってくるようにする））
-    selected_currency_on_query = UserPreferences.objects.filter(user=request.user).first().default_currency
+    selected_currency_on_query = request.GET.get("currency", UserPreferences.objects.filter(user=request.user).first().default_currency)
     selected_currency = Currency.objects.filter(name=selected_currency_on_query).first()
     
     # 自身の取引かつ今月の取引のみフィルター
